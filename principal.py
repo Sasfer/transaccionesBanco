@@ -6,8 +6,11 @@ from tkinter import *
 from tkinter import messagebox
 from cliente import *
 
+cliente = None # Esto debería estar dentro de una clase para no usar variables globales
+
 # Operación para inicar la conexión de un cliente a la cuenta
 def ingresar():
+	global cliente
 	# Variables con valores capturados de la GUI del cliente
 	nc = str(nombreCliente.get())
 	n = str(nip.get()) 
@@ -35,6 +38,7 @@ def ingresar():
 
 # Operación para hacer una consulta del estado de la cuenta
 def consultar():
+	global cliente
 	messagebox.showinfo("Notificación", "Has solicitado consultar la cuenta")
 
 	# Se realiza una consulta a la cuenta
@@ -42,6 +46,8 @@ def consultar():
 
 # Operación de retiro de la cuenta
 def retirar():
+	global cliente
+
 	# Variable con el valor capturado de la GUI del cliente
 	m = str(montoE.get())
 
@@ -54,6 +60,8 @@ def retirar():
 
 # Operación de depósito a la cuenta
 def depositar():
+	global cliente
+
 	# Variable con el valor capturado de la GUI del cliente
 	m = str(montoE.get())
 
@@ -66,6 +74,8 @@ def depositar():
 
 # Operación para finalizar la aplicación
 def salir():
+	global cliente
+
 	messagebox.showinfo("Notificación", "Has solicitado salir de la cuenta")
 
 	# Se cierra la sesión del cliente
