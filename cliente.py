@@ -1,93 +1,94 @@
+# Descripción:
+#	El cliente se encarga de indicar que operación se aplicará 
+#	sobre la cuenta, en general el procedimiento que sigue cada
+#   operación es el siguiente:
+#   	- Realizar conexión con el servidor
+#       - Definir una solicitud (petición), compuesta por token, operación y parametros
+#		- Enviar petición a través de un JSON, para que el servidor lo interprete
+#       - Generar un mensaje para el historial
+#       - Generar una notificación para el cliente
+#		- Cerrar conexión con el servidor
+
 import socket, time, json, threading
+from tkinter import messagebox
+from historial import *
 
-bloquear = threading.Lock()
+direccionServidor = ('localhost', 4444)
 
-direccionsServidor = ('localhost', 4444)
-
-
-class cliente():
+class Cliente():
+	# Definición para crear un cliente
     def __init__(self,nombreCliente):
         self.nombreCliente = nombreCliente
         self.sock = None
         self.token = None
-        self.solicitud = { 'token': None, 'accion': None, 'param':None }
-        
+        self.solicitud = {'token' : None, 'operacion' : None, 'parametros' : None}
+    
+    # Definición para iniciar un socket
     def iniciarSocket(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.connect(direccionsServidor)
+        self.sock.connect(direccionServidor)
 
-    def cerrarSocket(self):
-        self.sock.close()
-
-    def iniciarSession(self):
+    # Definición para iniciar una sesión
+    def iniciarSesion(self):
         self.iniciarSocket()
-        self.solicitud = {'iniciar':True}
-        jsonCadena = json.dumps(self.solicitud, separators=(',', ':'))
-        self.sock.send(jsonCadena)
+        self.solicitud = {'iniciar' : True}
+        peticionJSON = json.dumps(self.solicitud, separators=(',', ':'))
+        self.sock.send(peticionJSON)
         token = self.sock.recv(4096)
-        if(len(token) == 8):
+        if(len(token) == 10):
             self.token = token
-            print('iniciarSession',self.token,self.nombreCliente)
+            historial(' Inicio sesión ' + str(self.nombreCliente) + ' > T: ' + str(self.token))
+            messagebox.showinfo("Bienvenido", "Ha iniciado sesión " + self.nombreCliente)
         else:
             self.token = None
-            print('Error',token,self.nombreCliente)
-                
+            historial(' Error al iniciar sesión ' + str(self.nombreCliente) + ' > T: ' + str(self.token))
+            messagebox.showinfo("Error", "No se ha podido iniciar sesión " + str(self.nombreCliente) + ". Intente de nuevo")
         self.cerrarSocket()
 
-    def cerrarSession(self):
-        self.abrirSocket()
-        self.solicitud = {'token':self.token, 'accion':'cerrarSession', 'param':None, 'abrir':False}
-        jsonCadena = json.dumps(self.solicitud, separators=(',', ':'))
-        self.sock.send(jsonCadena)
-        respuesta = self.sock.recv(4096)
-        self.close_sock()
-        print('cerrarSession', respuesta, self.nombreCliente)
-
+    # Definición para realizar una consulta
     def consultar(self):
         self.abrirSocket()
-        self.solicitud = {'token':self.token, 'accion':'consultar', 'param':None,'abrir':False}
-        jsonCadena = json.dumps(self.solicitud, separators=(',', ':'))
-        self.sock.send(jsonCadena)
+        self.solicitud = {'token' : self.token, 'operacion' : 'consultar', 'parametros' : None, 'abrir' : False}
+        peticionJSON = json.dumps(self.solicitud, separators=(',', ':'))
+        self.sock.send(peticionJSON)
         respuesta = self.sock.recv(4096)
-        print('consultar: ',self.nombreCliente, respuesta,self.token)
+        historial(' Consulta por > ' + str(self.nombreCliente) + ' Saldo actual: ' + str(respuesta) + ' > T: ' + str(self.token))
+        messagebox.showinfo("Consulta SALDO", str(self.nombreCliente) + " el saldo actual de la cuenta es de $ " + str(respuesta))
         self.cerrarSocket()
 
+    # Definición para realizar un deposito
     def depositar(self, monto):
-        self.cerrarSocket()
-        self.solicitud = {'token':self.token, 'accion':'depositar', 'param':monto,'abrir':False}
-        jsonCadena = json.dumps(self.solicitud, separators=(',', ':'))
-        self.sock.send(jsonCadena)
+        self.abrirSocket()
+        self.solicitud = {'token' : self.token, 'operacion' : 'depositar', 'parametros' : monto, 'abrir' : False}
+        peticionJSON = json.dumps(self.solicitud, separators=(',', ':'))
+        self.sock.send(peticionJSON)
         respuesta = self.sock.recv(4096)
-        print('depositar: ',self.nombreCliente, respuesta,self.token)
+        historial(' Deposito por > ' + str(self.nombreCliente) + ' Saldo actual: ' + str(respuesta) + ' > T: ' + str(self.token))
+        messagebox.showinfo("Deposito", str(self.nombreCliente) + " realizo un deposito de $ " + str(monto) + ' > Saldo actual $ ' + str(respuesta))
         self.cerrarSocket()
 
+    # Definición para realizar un retiro
     def retirar(self, monto):
         self.abrirSocket()
-        self.solicitud = {'token':self.token, 'accion':'asignarMonto', 'param':monto, 'abrir':False}
-        jsonCadena = json.dumps(self.solicitud, separators=(',', ':'))
-        self.sock.send(jsonCadena)
+        self.solicitud = {'token' : self.token, 'operacion':'retirar', 'parametros': monto, 'abrir' : False}
+        peticionJSON = json.dumps(self.solicitud, separators=(',', ':'))
+        self.sock.send(peticionJSON)
         respuesta = self.sock.recv(4096)
-        print('asignarMonto: ',self.nombreCliente,respuesta,self.token)
+        historial(' Retiro por > ' + str(self.nombreCliente) + ' Saldo actual: ' + str(respuesta) + ' > T: ' + str(self.token))
+        messagebox.showinfo("Retiro", str(self.nombreCliente) + " realizo un retiro de $ " + str(monto) + ' > Saldo actual $ ' + str(respuesta))
         self.cerrarSocket()
 
-#x = Client('Bob')
-a = Client('Alice')
-#x.open_session()
-a.open_session()
-a.withdraw(100)
-a.get_balance()
+    # Definición para cerrar una sesión
+    def cerrarSesion(self):
+        self.abrirSocket()
+        self.solicitud = {'token' : self.token, 'operacion' : 'cerrarSesion', 'parametros' : None, 'abrir' : False}
+        peticionJSON = json.dumps(self.solicitud, separators=(',', ':'))
+        self.sock.send(peticionJSON)
+        respuesta = self.sock.recv(4096)
+        historial(' Finalizo sesión ' + str(self.nombreCliente) + ' ,' + str(respuesta))
+        messagebox.showinfo("Adios", "Ha finalizado sesión " + self.nombreCliente)
+        self.close_sock()
 
-time.sleep(3)
-a.close_session()
-
-x = Client('Bob')
-x.open_session()
-x.get_balance()
-
-# a.get_balance()
-
-# #a.close_session()
-# #x.close_session()
-# #a.withdraw(10)
-# a.get_balance()
-# a.close_session()
+    # Definición para cerrar un socket
+    def cerrarSocket(self):
+        self.sock.close()
