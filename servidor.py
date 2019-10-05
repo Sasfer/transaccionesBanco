@@ -1,11 +1,15 @@
 # Descripcion:
 #   El servidor se encarga de escuchar a través del socket las diversas
-#   peticiones que le hagan los clientes que se coneccten a el.
+#   peticiones que le hagan los clientes que se conecten a el.
+#
+#	Cada que un cliente desee realizar alguna operación sobre la cuenta
+#	se creará una nueva conexión entre este y el servidor, de tal forma
+#	que la conexión que se establece no es persistente.
 
+from operacion import Operacion
+from historial import *
 import socket
 import json
-from coordinador import Coordinador
-from crearCuentas import *
 
 # Se crea un socket TCP/IP
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -16,13 +20,10 @@ direccionServidor = ('localhost', 4444)
 sock.bind(direccionServidor)
 
 # Número máximo de conexiones que escuchará el servidor
-sock.listen(5)
-
-# Se generan la cuentas bancarias
-# crearCuentas(50)
+sock.listen(10)
 
 # Se inicia el coordinador de transacciones
-c = Coordinador()
+c = Operacion()
 
 while True:
     conexion, direccionCliente = sock.accept()
@@ -34,19 +35,29 @@ while True:
         # Se formatean los datos para que sean enviados a JSON
         p = json.loads(datos)
 
-        # Caso en el que se abre el socket, se inicia la transacción
+        # Se abre el socket para inicar la transacción y se
+        # devuelve el token asignado al cliente que accedio 
+        # a la cuenta
         if(p['iniciar'] == True):
-            print('iniciarTransaccion')
+            historial(' Inicia transacción ')
             r = c.iniciarTransaccion()
-            print('iniciarTransaccion datos',r)
+            historial(' Inicia transacción datos ' + r)
             conexion.sendall(str(r))
+        # Se ejecuta el método hacer de la instancia del coordinadorse 
+        # Se envia: 
+        #	- El token asignado al cliente al comenzar a operar sobre la cuenta
+        #	- La operación que se desea realizar
+        #	- Los parametros proporcionados por el cliente dependiendo de la
+        #	  operación a realizar sobre la cuente
+        # Se regresa:
+        # 	- La respuesta de ejecutar la operación indicada sobre la cuenta
         elif(p['token']):
-            print('hacer::')
-            r = c.hacer(p['token'], p['accion'], p['param'] )
-            print(r)
+        	historial(' Hacer -> ')
+            r = c.operar(p['token'], p['operacion'], p['parametros'])
+            historial(' Respuesta ' + str(r))
             conexion.sendall(str(r))
         else:
             conexion.sendall(str('ERROR'))
 
     else:
-        print('Sin datos', direccionCliente)
+    	historial(' Sin datos **** ' + str(direccionCliente))
