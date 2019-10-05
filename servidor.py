@@ -7,7 +7,7 @@
 #	que la conexión que se establece no es persistente.
 
 from operacion import Operacion
-from historial import *
+from historial import agregarHistorial
 import socket
 import json
 
@@ -39,10 +39,10 @@ while True:
         # devuelve el token asignado al cliente que accedio 
         # a la cuenta
         if(p['iniciar'] == True):
-            historial(' Inicia transacción ')
-            r = c.iniciarTransaccion()
-            historial(' Inicia transacción datos ' + r)
-            conexion.sendall(str(r))
+            agregarHistorial(' Inicia transacción ')
+            r = c.abrirTransaccion()
+            agregarHistorial(' Inicia transacción datos ' + r)
+            conexion.sendall(str(r).encode())
         # Se ejecuta el método hacer de la instancia del coordinadorse 
         # Se envia: 
         #	- El token asignado al cliente al comenzar a operar sobre la cuenta
@@ -52,12 +52,12 @@ while True:
         # Se regresa:
         # 	- La respuesta de ejecutar la operación indicada sobre la cuenta
         elif(p['token']):
-        	historial(' Hacer -> ')
+            agregarHistorial(' Hacer -> ')
             r = c.operar(p['token'], p['operacion'], p['parametros'])
-            historial(' Respuesta ' + str(r))
-            conexion.sendall(str(r))
+            agregarHistorial(' Respuesta ' + str(r))
+            conexion.sendall(str(r).encode())
         else:
-            conexion.sendall(str('ERROR'))
+            conexion.sendall(str('ERROR').encode())
 
     else:
-    	historial(' Sin datos **** ' + str(direccionCliente))
+    	agregarHistorial(' Sin datos **** ' + str(direccionCliente))
