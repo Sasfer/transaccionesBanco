@@ -1,6 +1,6 @@
 # Descripción:
 #   Ventana principal para que varios clientas puedan accesar a una misma 
-#	cuenta y poder hacer diversas transacciones
+#	cuenta y poder hacer diversas operaciones sobre esta.
 
 from tkinter import *
 from tkinter import messagebox
@@ -8,31 +8,80 @@ from cliente import *
 
 # Operación para inicar la conexión de un cliente a la cuenta
 def ingresar():
-	validacionIngreso = 0
-
 	# Variables con valores capturados de la GUI del cliente
 	nc = str(nombreCliente.get())
 	n = str(nip.get()) 
-	
-	# Creación del objeto identificador del cliente
-	cliente = cliente(nc)
-	messagebox.showinfo("Notificación", "Numero de cuenta/NIP incorrectos")
+
+	if nc == "" or n == "":
+		messagebox.showinfo("Error", "No has ingresado el nombre del cliente o el NIP")
+	else:
+		messagebox.showinfo("Notificación", "Has solicitado ingresar a la cuenta")
+		# Creación del objeto identificador del cliente
+		cliente = Cliente(nc)
+		# Se inicia un sesión para el cliente 
+		cliente.iniciarSesion()
+
+		# Se dehabilitan algunas opción de la ventana
+		ingresarB.config(state='disabled')
+		nombreClienteE.config(state='disabled')
+		nipE.config(state='disabled')
+
+		# Se habilitam algunas opciones de la ventana
+		montoE.config(state='normal')
+		consultarB.config(state='normal')
+		depositarB.config(state='normal')
+		retirarB.config(state='normal')
+		salirB.config(state='normal')
 
 # Operación para hacer una consulta del estado de la cuenta
 def consultar():
-	messagebox.showinfo("Notificación", "Consultar")
+	messagebox.showinfo("Notificación", "Has solicitado consultar la cuenta")
+
+	# Se realiza una consulta a la cuenta
+	cliente.consultar()
 
 # Operación de retiro de la cuenta
 def retirar():
-	messagebox.showinfo("Notificación", "Retirar")
+	# Variable con el valor capturado de la GUI del cliente
+	m = str(montoE.get())
+
+	if m == "":
+		messagebox.showinfo("Notificación", "No has ingresado el monto a retirar")	
+	else:
+		messagebox.showinfo("Notificación", "Has solicitado hacer un retiro de la cuenta")
+		m = montoE.get()
+		cliente.retirar(m)
 
 # Operación de depósito a la cuenta
 def depositar():
-	messagebox.showinfo("Notificación", "Despositar")
+	# Variable con el valor capturado de la GUI del cliente
+	m = str(montoE.get())
+
+	if m == "":
+		messagebox.showinfo("Notificación", "No has ingresado el monto a depositar")	
+	else:
+		messagebox.showinfo("Notificación", "Has solicitado hacer un deposito a la cuenta")
+		m = montoE.get()
+		cliente.depositar(m)
 
 # Operación para finalizar la aplicación
 def salir():
-	messagebox.showinfo("Notificación", "Salir")
+	messagebox.showinfo("Notificación", "Has solicitado salir de la cuenta")
+
+	# Se cierra la sesión del cliente
+	cliente.cerrarSesion()
+
+	# Se dehabilitan algunas opción de la ventana
+	ingresarB.config(state='nombre')
+	nombreClienteE.config(state='normal')
+	nipE.config(state='normal')
+
+	# Se habilitam algunas opciones de la ventana
+	montoE.config(state='disabled')
+	consultarB.config(state='disabled')
+	depositarB.config(state='disabled')
+	retirarB.config(state='disabled')
+	salirB.config(state='disabled')
 
 
 # Se crea la ventana principal
@@ -41,7 +90,7 @@ banco.title('Banco FIMSS')
 banco.geometry('370x220')
 
 # Obtenemos las variables de entrada de los campos input
-nombreCliente = IntVar()
+nombreCliente = StringVar()
 nip = IntVar()
 monto = IntVar()
 
