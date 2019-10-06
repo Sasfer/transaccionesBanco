@@ -19,6 +19,8 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 direccionServidor = ('localhost', 4444)
 sock.bind(direccionServidor)
 
+print(' >> Servidor iniciado ')
+
 # Número máximo de conexiones que escuchará el servidor
 sock.listen(10)
 
@@ -33,17 +35,17 @@ while True:
     
     if datos:
         # Se formatean los datos para que sean enviados a JSON
-        p = json.loads(datos)
+        p = json.loads(datos.decode('utf-8'))
 
         # Se abre el socket para inicar la transacción y se
         # devuelve el token asignado al cliente que accedio 
         # a la cuenta
         if(p['iniciar'] == True):
-            agregarHistorial(' Inicia transacción ')
+            agregarHistorial(' S ** Inicia transacción ')
             r = c.abrirTransaccion()
-            agregarHistorial(' Inicia transacción datos ' + r)
+            agregarHistorial(' S ** Inicia transacción datos ' + r)
             conexion.sendall(str(r).encode())
-        # Se ejecuta el método hacer de la instancia del coordinadorse 
+        # Se ejecuta el método hacer de la instancia de operación se 
         # Se envia: 
         #	- El token asignado al cliente al comenzar a operar sobre la cuenta
         #	- La operación que se desea realizar
@@ -52,12 +54,12 @@ while True:
         # Se regresa:
         # 	- La respuesta de ejecutar la operación indicada sobre la cuenta
         elif(p['token']):
-            agregarHistorial(' Hacer -> ')
+            agregarHistorial(' S ** Hacer -> ')
             r = c.operar(p['token'], p['operacion'], p['parametros'])
-            agregarHistorial(' Respuesta ' + str(r))
+            agregarHistorial(' S ** Respuesta ' + str(r))
             conexion.sendall(str(r).encode())
         else:
             conexion.sendall(str('ERROR').encode())
 
     else:
-    	agregarHistorial(' Sin datos **** ' + str(direccionCliente))
+    	agregarHistorial(' S ** Sin datos **** ' + str(direccionCliente))
