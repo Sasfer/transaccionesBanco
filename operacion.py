@@ -18,19 +18,22 @@ saldo = 10000.0
 bloquear = threading.Lock()
 bloqueado = False
 
-
 # Definición para generar una clave como identificador a los 
 # hilos para gestionarlos, es decir, un token 
-def generarPassword(longitud=10):
-    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=longitud))
-
+def generarPassword(longitud):
+	caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+	password = ""
+	for i in range(longitud):
+		car = random.choice(caracteres)
+		password = password + car
+	return password
 
 # Clase que define el tipo de transacciones que un cliente 
 # tiene disponibles para aplicar a la cuenta
 class Transaccion():
     # Método constructor de la clase Transacción
-    def __init__(self):
-        self.saldo = saldo
+    def __init__(self,saldo):
+        self.saldo = float(saldo)
 
     # Obtiene el saldo de la cuenta
     def consultar(self):
@@ -38,12 +41,12 @@ class Transaccion():
 
     # Depositara un nuevo monto en la cuenta
     def depositar(self, monto):
-        self.saldo = self.saldo + monto 
+        self.saldo = self.saldo + float(monto) 
         return self.saldo
 
     # Retiro de un determinado monto de la cuenta
     def retirar(self, monto):
-        self.saldo = self.saldo - monto 
+        self.saldo = self.saldo - float(monto) 
         return self.saldo
 
 # Clase que se encarga de manejar las operaciones en la cuenta 
@@ -53,25 +56,25 @@ class Operacion():
         global saldo
         self.saldo = saldo 
 
-    # Se establece un tiempo de espera de 2 segundos
+    # Se establece un tiempo de espera para la sesión
     def timeout(self):
         global timeout
         timeout = time.time()
-        timeout += 2.0
-        agregarHistorial(' Se acabo el tiempo de espera ')
+        timeout += 180.0
+        agregarHistorial(' O ** Inicia el tiempo de espera ')
 
     # Se revisa si la cuenta está siendo utilizado por otro cliente, 
     # en caso de ser verdadero se le notifica al cliente actual que 
     # debe esperar a que la transación externa finalice
     def abrirTransaccion(self):
         global bloqueado, tokenActual 
-        agregarHistorial(' Estado cuenta >> ' + str(bloqueado))
+        agregarHistorial(' O ** Estado cuenta >> ' + str(bloqueado))
         # Se inicia el tiempo de espera
         self.timeout()
         if(bloqueado):
             return self.abortaTransaccion(' La cuenta está siendo utilizada por otro cliente ')
         else:
-            tokenActual = generarPassword()
+            tokenActual = generarPassword(10)
             return self.token(tokenActual)
     
     # Implementación de las operaciones disponibles en el sistema   
@@ -83,39 +86,43 @@ class Operacion():
         if(token != tokenActual and bloqueado == False and operacion == 'consultar'):
             ope = Transaccion(self.saldo)
             return ope.consultar()
+    	
+        #if(token != tokenActual):
+        #    agregarHistorial(' 0 ** >> TIEMPO DEL SERVIDOR FINALIZADO ')
+        #    return self.abortaTransaccion(' Token finalizado')
     
-        if(token != tokenActual):
-            agregarHistorial(' >> TIEMPO DEL SERVIDOR FINALIZADO ')
-            messagebox.showinfo("Notificación", "¡TIEMPO DEL SERVIDOR FINALIZADO!")
-            return self.abortaTransaccion(' Token finalizado')
-        
         if(timeout < time.time()):
-            agregarHistorial(' >> TOKEN DEL SERVIDOR FINALIZADO **** T: ' + str(token))
-            messagebox.showinfo("Notificación", "¡TOKEN DEL SERVIDOR FINALIZADO!")
+            agregarHistorial(' 0 ** >> TOKEN DEL SERVIDOR FINALIZADO **** T: ' + str(token))
             return self.abortaTransaccion(' Se acabo el tiempo, sesion finalizada')
-
+	        
         # Consultar no bloquea la cuenta   
         if(operacion == 'consultar'):
-            agregarHistorial(' Operacion consultar ')
+            agregarHistorial(' 0 ** Operacion consultar ')
             ope = Transaccion(self.saldo)
             return ope.consultar()
 
         elif(operacion == 'depositar'):
             bloqueado = True
-            agregarHistorial(' Operacion depositar ')
+            agregarHistorial(' 0 ** Operacion depositar ')
             ope = Transaccion(self.saldo)
+            # Tiempo que permitira comprobar si se bloquea o no la 
+            # cuenta dependiendo si se trata de lectura/escritura
+            time.sleep(5)
             self.saldo = ope.depositar(parametros)
             return self.saldo
 
         elif(operacion == 'retirar'):
             bloqueado = True
-            agregarHistorial(' Operacion retirar ')
+            agregarHistorial(' 0 ** Operacion retirar ')
             ope = Transaccion(self.saldo)
+            # Tiempo que permitira comprobar si se bloquea o no la 
+            # cuenta dependiendo si se trata de lectura/escritura
+            time.sleep(5)
             self.saldo = ope.retirar(parametros)
             return self.saldo
 
         elif(operacion == 'cerrarSesion'):
-            agregarHistorial(' Operacion cerrar sesión ')
+            agregarHistorial(' 0 ** Operacion cerrar sesión ')
             ope = Transaccion(self.saldo)
             nuevoSaldo = ope.consultar()
             if(nuevoSaldo >= 0):
@@ -126,7 +133,7 @@ class Operacion():
     # Se cierra la transacción
     def cerrarTransaccion(self, nuevoSaldo):
         global bloqueado,tokenActual
-        agregarHistorial(' Operacion cerrar sesión ')
+        agregarHistorial(' 0 ** Operacion cerrar sesión ')
         saldo = nuevoSaldo
         self.saldo = saldo
         bloqueado = False
@@ -135,13 +142,13 @@ class Operacion():
     
     # Se asigna un token a la transacción
     def token(self, token):
-        agregarHistorial(' Token actual ' + str(token))
+        agregarHistorial(' 0 ** Token actual ' + str(token))
         return token
 
     # Se aborta la transaccion si es necesario
     def abortaTransaccion(self, mensaje):
         global bloqueado,tokenActual
-        agregarHistorial(' Operación aborta transaccion ')
+        agregarHistorial(' 0 ** Operación aborta transaccion ')
         bloqueado = False
         tokenActual = None
         self.saldo = saldo
