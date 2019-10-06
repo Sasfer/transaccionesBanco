@@ -36,6 +36,9 @@ def ingresar():
 		retirarB.config(state='normal')
 		salirB.config(state='normal')
 
+		# Se limpia el campo de monto
+		montoE.delete(0,END)
+
 # Operación para hacer una consulta del estado de la cuenta
 def consultar():
 	global cliente
@@ -82,7 +85,7 @@ def salir():
 	cliente.cerrarSesion()
 
 	# Se dehabilitan algunas opción de la ventana
-	ingresarB.config(state='nombre')
+	ingresarB.config(state='normal')
 	nombreClienteE.config(state='normal')
 	nipE.config(state='normal')
 
@@ -93,6 +96,9 @@ def salir():
 	retirarB.config(state='disabled')
 	salirB.config(state='disabled')
 
+	# Limpia los campo de nombre y NIP
+	nombreClienteE.delete(0,END)
+	nipE.delete(0,END)
 
 # Se crea la ventana principal
 banco = Tk()
@@ -145,7 +151,6 @@ salirB.place(x=260, y=180, width=70, height=25)
 # Se elimina el cero que es el valor inicial de los campos.
 nombreClienteE.delete(0,END)
 nipE.delete(0,END)
-montoE.delete(0,END)
 
 # Loop para mantener renderizada la ventana de tkinter
 banco.mainloop()
