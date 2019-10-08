@@ -19,33 +19,61 @@ def ingresar():
 		messagebox.showinfo("Error", "No has ingresado el nombre del cliente o el NIP")
 	else:
 		messagebox.showinfo("Notificación", "Has solicitado ingresar a la cuenta")
+		
 		# Creación del objeto identificador del cliente
 		cliente = Cliente(nc)
+		
 		# Se inicia un sesión para el cliente 
-		cliente.iniciarSesion()
+		res = cliente.iniciarSesion()
 
-		# Se dehabilitan algunas opción de la ventana
-		ingresarB.config(state='disabled')
-		nombreClienteE.config(state='disabled')
-		nipE.config(state='disabled')
+		# Si la sesión se ha iniciado correctamente,
+		# se habilitan los respectivos capos de transacciones
+		if res == 1:
+			# Se dehabilitan algunas opción de la ventana
+			ingresarB.config(state='disabled')
+			nombreClienteE.config(state='disabled')
+			nipE.config(state='disabled')
 
-		# Se habilitam algunas opciones de la ventana
-		montoE.config(state='normal')
-		consultarB.config(state='normal')
-		depositarB.config(state='normal')
-		retirarB.config(state='normal')
-		salirB.config(state='normal')
+			# Se habilitam algunas opciones de la ventana
+			montoE.config(state='normal')
+			consultarB.config(state='normal')
+			depositarB.config(state='normal')
+			retirarB.config(state='normal')
+			salirB.config(state='normal')
 
-		# Se limpia el campo de monto
-		montoE.delete(0,END)
-
+			# Se limpia el campo de monto
+			montoE.delete(0,END)
+			
 # Operación para hacer una consulta del estado de la cuenta
 def consultar():
 	global cliente
 	messagebox.showinfo("Notificación", "Has solicitado consultar la cuenta")
 
 	# Se realiza una consulta a la cuenta
-	cliente.consultar()
+	res = cliente.consultar()
+
+	# Si la sesión finalizo, se regresa a iniciar sesión de nuevo
+	if(res == -1):
+		cliente.cerrarSesion()
+
+		# Se dehabilitan algunas opción de la ventana
+		ingresarB.config(state='normal')
+		nombreClienteE.config(state='normal')
+		nipE.config(state='normal')
+
+		# Se habilitam algunas opciones de la ventana
+		montoE.config(state='disabled')
+		consultarB.config(state='disabled')
+		depositarB.config(state='disabled')
+		retirarB.config(state='disabled')
+		salirB.config(state='disabled')
+
+		# Limpia los campo de nombre y NIP
+		nombreClienteE.delete(0,END)
+		nipE.delete(0,END)
+	
+	# Se limpia el campo de monto
+	montoE.delete(0,END)
 
 # Operación de retiro de la cuenta
 def retirar():
@@ -57,9 +85,33 @@ def retirar():
 	if m == "":
 		messagebox.showinfo("Notificación", "No has ingresado el monto a retirar")	
 	else:
-		messagebox.showinfo("Notificación", "Has solicitado hacer un retiro de la cuenta")
-		m = montoE.get()
-		cliente.retirar(m)
+		messagebox.showinfo("Notificación", "Has solicitado hacer un retiro de la cuenta")	
+		
+		# Se realiza un retiro a la cuenta
+		res = cliente.retirar(m)
+
+		# Si la sesión finalizo, se regresa a iniciar sesión de nuevo
+		if(res == -1):
+			cliente.cerrarSesion()
+
+			# Se dehabilitan algunas opción de la ventana
+			ingresarB.config(state='normal')
+			nombreClienteE.config(state='normal')
+			nipE.config(state='normal')
+
+			# Se habilitam algunas opciones de la ventana
+			montoE.config(state='disabled')
+			consultarB.config(state='disabled')
+			depositarB.config(state='disabled')
+			retirarB.config(state='disabled')
+			salirB.config(state='disabled')
+
+			# Limpia los campo de nombre y NIP
+			nombreClienteE.delete(0,END)
+			nipE.delete(0,END)
+	
+	# Se limpia el campo de monto
+	montoE.delete(0,END)
 
 # Operación de depósito a la cuenta
 def depositar():
@@ -72,8 +124,32 @@ def depositar():
 		messagebox.showinfo("Notificación", "No has ingresado el monto a depositar")	
 	else:
 		messagebox.showinfo("Notificación", "Has solicitado hacer un deposito a la cuenta")
-		m = montoE.get()
-		cliente.depositar(m)
+
+		# Se realiza un deposito a la cuenta
+		res = cliente.depositar(m)
+
+		# Si la sesión finalizo, se regresa a iniciar sesión de nuevo
+		if(res == -1):
+			cliente.cerrarSesion()
+
+			# Se dehabilitan algunas opción de la ventana
+			ingresarB.config(state='normal')
+			nombreClienteE.config(state='normal')
+			nipE.config(state='normal')
+
+			# Se habilitam algunas opciones de la ventana
+			montoE.config(state='disabled')
+			consultarB.config(state='disabled')
+			depositarB.config(state='disabled')
+			retirarB.config(state='disabled')
+			salirB.config(state='disabled')
+
+			# Limpia los campo de nombre y NIP
+			nombreClienteE.delete(0,END)
+			nipE.delete(0,END)
+			
+	# Se limpia el campo de monto
+	montoE.delete(0,END)
 
 # Operación para finalizar la aplicación
 def salir():
