@@ -7,16 +7,7 @@ from datetime import timedelta
 from tkinter import messagebox
 from historial import agregarHistorial
 
-# Variables globales a utilizar para operar la cuenta
-timeout = None
 
-sesionFinalizada = False
-
-tokenActual = None
-
-saldo = 10000.0
-
-bloqueado = False
 
 # Definición para generar una clave como identificador a los 
 # hilos para gestionarlos, es decir, un token 
@@ -56,16 +47,19 @@ class Transaccion():
 
 # Clase que se encarga de manejar las operaciones en la cuenta 
 class Operacion():
-    # Método constructor de la clase Coordinador
+    # Método constructor de la clase Coordinador, 
+    # utiliza estas configuraciones para inicializar
     def __init__(self):
-        global saldo
-        self.saldo = saldo 
+        self.timeoutVal = None
+        self.sesionFinalizada = False
+        self.tokenActual = None
+        self.saldo = 10000.0
+        self.bloqueado = False
 
     # Se establece un tiempo de espera para mantener la sesión abierta
     def timeout(self):
-        global timeout
-        timeout = time.time()
-        timeout += 100.0
+        self.timeoutVal = time.time()
+        self.timeoutVal += 100.0
         agregarHistorial(' O ** Inicia el tiempo de espera ')
 
     # Se asigna un token a la transacción
@@ -75,18 +69,16 @@ class Operacion():
 
     # Se cierra la transacción
     def cerrarTransaccion(self, nuevoSaldo):
-        global bloqueado,tokenActual
         agregarHistorial(' O ** CERRAR TRANSACCIÓN')
         self.saldo = nuevoSaldo
-        bloqueado = False
-        tokenActual = None
+        self.bloqueado = False
+        self.tokenActual = None
         return self.saldo
     
     # Se aborta la transaccion si es necesario
     def abortaTransaccion(self, mensaje):
-        global bloqueado,tokenActual
-        bloqueado = False
-        tokenActual = None
+        self.bloqueado = False
+        self.tokenActual = None
         return mensaje
 
     # Se verifica que se pueda iniciar una sesión 
@@ -94,15 +86,14 @@ class Operacion():
     # en caso de ser verdadero se le notifica al cliente actual que 
     # debe esperar a que la transación externa finalice
     def abrirTransaccion(self):
-        global bloqueado, tokenActual 
-        agregarHistorial(' O ** Estado cuenta >> ' + str(bloqueado))
+        agregarHistorial(' O ** Estado cuenta >> ' + str(self.bloqueado))
         # Se establece el tiempo que la sesión de un cliente
         # puede mantenerse abierta
         self.timeout()
         # Caso de que se este haciendo alguna transacción de 
         # retiro o depositó, no se podrá abrir una transacción,
         # es decir, no se podrá iniciar sesión
-        if(bloqueado):
+        if(self.bloqueado):
             agregarHistorial(' O ** ABORTA TRANSACCIÓN >> La cuenta está siendo utilizada por otro cliente ')
             return self.abortaTransaccion(' La cuenta está siendo utilizada por otro cliente ')
         else:
@@ -111,11 +102,10 @@ class Operacion():
     
     # Implementación de las operaciones disponibles en el sistema   
     def operar(self, token, operacion, parametros=None):
-        global bloqueado,tokenActual,sesionFinalizada
     
         # Se verifica que no se haya terminado el tiempo de sesión
-        if(timeout < time.time()):
-            sesionFinalizada = True
+        if(self.timeoutVal < time.time()):
+            self.sesionFinalizada = True
             agregarHistorial(' 0 ** >> TOKEN DEL CLIENTE FINALIZADO **** T: ' + str(token))
             return self.abortaTransaccion('Se acabo el tiempo, sesion finalizada')
 	        
@@ -126,7 +116,7 @@ class Operacion():
             return ope.consultar()
 
         elif(operacion == 'depositar'):
-            bloqueado = True
+            self.bloqueado = True
             print('Entre a depositar')
             agregarHistorial(' 0 ** Operacion depositar ')
             ope = Transaccion(self.saldo)
@@ -137,7 +127,7 @@ class Operacion():
             return self.saldo
 
         elif(operacion == 'retirar'):
-            bloqueado = True
+            self.bloqueado = True
             agregarHistorial(' 0 ** Operacion retirar ')
             ope = Transaccion(self.saldo)
             # Tiempo que permitira comprobar si se bloquea o no la 
