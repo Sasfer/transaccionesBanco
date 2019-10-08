@@ -41,7 +41,7 @@ while True:
         # devuelve el token asignado al cliente que accedio 
         # a la cuenta
         if(p['iniciar'] == True):
-            agregarHistorial(' S ** Inicia transacción ')
+            agregarHistorial(' S ** Cliente' + p.get('cliente') +'inicia sesión ')
             r = c.abrirTransaccion()
             agregarHistorial(' S ** Inicia transacción datos ' + r)
             conexion.sendall(str(r).encode())
@@ -53,9 +53,9 @@ while True:
         #	  operación a realizar sobre la cuente
         # Se regresa:
         # 	- La respuesta de ejecutar la operación indicada sobre la cuenta
-        elif(p['token']):
+        elif(p.get('token')):
             agregarHistorial(' S ** Hacer -> ')
-            r = c.operar(p['token'], p['operacion'], p['parametros'])
+            r = c.operar(p.get('token'), p.get('operacion'), p.get('parametros'))
             agregarHistorial(' S ** Respuesta ' + str(r))
             conexion.sendall(str(r).encode())
         else:
