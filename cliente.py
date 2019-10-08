@@ -14,19 +14,19 @@ from tkinter import messagebox
 from historial import agregarHistorial
 
 direccionServidor = ('localhost', 4444)
+MAX_DATA = 4096
 
 # Definición para tratar la impresión de los valores de la cuenta
 def impresion(respuesta):
-    respuesta = str(respuesta).replace("'","")
-    return respuesta.replace("b","")
+    return respuesta.decode()
 
 class Cliente():
     # Definición para crear un cliente
-    def __init__(self,nombreCliente):
+    def __init__(self, nombreCliente):
         self.nombreCliente = nombreCliente
         self.sock = None
         self.token = None
-        self.solicitud = {'token':None,'operacion':None,'parametros':None}
+        self.solicitud = {'token': None, 'operacion': None, 'parametros': None}
     
     # Definición para iniciar un socket
     def iniciarSocket(self):
@@ -41,10 +41,10 @@ class Cliente():
     def iniciarSesion(self):
         try:
             self.iniciarSocket()
-            self.solicitud = {'iniciar':True}
+            self.solicitud = {'iniciar': True, 'cliente': self.nombreCliente}
             peticionJSON = json.dumps(self.solicitud, separators=(',', ':'))
             self.sock.send(peticionJSON.encode())
-            token = self.sock.recv(4096)
+            token = self.sock.recv(MAX_DATA)
             if(len(token) == 10):
                 self.token = token
                 agregarHistorial(' C ** Inicio sesión ' + str(self.nombreCliente) + ' > T: ' + str(self.token))
@@ -67,10 +67,10 @@ class Cliente():
     def consultar(self):
         try:
             self.iniciarSocket()
-            self.solicitud = {'token':str(self.token),'operacion':'consultar','parametros':False,'iniciar':False}
+            self.solicitud = {'token': str(self.token), 'operacion': 'consultar', 'parametros':False, 'iniciar': False}
             peticionJSON = json.dumps(self.solicitud, separators=(',', ':'))
             self.sock.send(peticionJSON.encode())
-            respuesta = self.sock.recv(4096)
+            respuesta = self.sock.recv(MAX_DATA)
             agregarHistorial(' C ** Consulta por > ' + str(self.nombreCliente) + ' Saldo actual: ' + str(impresion(respuesta)) + ' > T: ' + str(self.token))
             messagebox.showinfo("Consulta SALDO", str(self.nombreCliente) + " el saldo actual de la cuenta es de $ " + str(impresion(respuesta)))
             self.cerrarSocket()
@@ -85,10 +85,10 @@ class Cliente():
     def depositar(self, monto):
         try:
             self.iniciarSocket()
-            self.solicitud = {'token':str(self.token),'operacion':'depositar','parametros':monto,'iniciar':False}
+            self.solicitud = {'token': str(self.token), 'operacion':'depositar', 'parametros': monto, 'iniciar': False}
             peticionJSON = json.dumps(self.solicitud, separators=(',', ':'))
             self.sock.send(peticionJSON.encode())
-            respuesta = self.sock.recv(4096)
+            respuesta = self.sock.recv(MAX_DATA)
             agregarHistorial(' C ** Deposito por > ' + str(self.nombreCliente) + '\n*** Saldo actual: ' + str(impresion(respuesta)) + ' > T: ' + str(self.token))
             self.cerrarSocket()
             #Regresa un -1 cuando la sesion finalizo
@@ -104,10 +104,10 @@ class Cliente():
     def retirar(self, monto):
         try:
             self.iniciarSocket()
-            self.solicitud = {'token':str(self.token),'operacion':'retirar','parametros':monto,'iniciar':False}
+            self.solicitud = {'token': str(self.token), 'operacion':'retirar', 'parametros':monto, 'iniciar': False}
             peticionJSON = json.dumps(self.solicitud, separators=(',', ':'))
             self.sock.send(peticionJSON.encode())
-            respuesta = self.sock.recv(4096)
+            respuesta = self.sock.recv(MAX_DATA)
             agregarHistorial(' C ** Retiro por > ' + str(self.nombreCliente) + ' Saldo actual: ' + str(impresion(respuesta)) + ' > T: ' + str(self.token))
             self.cerrarSocket()
             # Regresa un -1 cuando la sesion finalizo
@@ -127,10 +127,10 @@ class Cliente():
     def cerrarSesion(self):
         try:
             self.iniciarSocket()
-            self.solicitud = {'token':str(self.token),'operacion':'cerrarSesion','parametros':None,'iniciar':False}
+            self.solicitud = {'token': str(self.token), 'operacion':'cerrarSesion', 'parametros':None, 'iniciar': False}
             peticionJSON = json.dumps(self.solicitud, separators=(',', ':'))
             self.sock.send(peticionJSON.encode())
-            respuesta = self.sock.recv(4096)
+            respuesta = self.sock.recv(MAX_DATA)
             agregarHistorial(' C ** Finalizo sesión ' + str(self.nombreCliente) + ' ,' + str(impresion(respuesta)))
             messagebox.showinfo("Adios", "Ha finalizado sesión " + self.nombreCliente)
             self.sock.close()
