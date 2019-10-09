@@ -6,7 +6,7 @@
 #	se creará una nueva conexión entre este y el servidor, de tal forma
 #	que la conexión que se establece no es persistente.
 
-from operacion import Operacion
+from operacion import Operacion, generarPassword
 from historial import agregarHistorial
 import socket
 import json
@@ -54,12 +54,13 @@ while True:
         # Se regresa:
         # 	- La respuesta de ejecutar la operación indicada sobre la cuenta
         elif(p.get('token')):
+            transaccionToken = generarPassword(10)
             agregarHistorial(' S ** Hacer -> ')
-            r = c.operar(p.get('token'), p.get('operacion'), p.get('parametros'))
+            r = c.operar(p.get('token') + transaccionToken, p.get('operacion'), p.get('parametros'))
             agregarHistorial(' S ** Respuesta ' + str(r))
             conexion.sendall(str(r).encode())
         else:
-            conexion.sendall(str('ERROR').encode())
+            conexion.sendall(str('ERROR EN LA TRANSACCION').encode())
 
     else:
     	agregarHistorial(' S ** Sin datos **** ' + str(direccionCliente))

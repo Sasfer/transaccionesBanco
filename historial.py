@@ -12,3 +12,8 @@ def agregarHistorial(mensaje):
 	historial.write(' >> ' + str(time.strftime("%d/%m/%y %H:%M:%S - ")) + mensaje + '\n')
 	
 	historial.close()
+
+# Definición para tratar la impresión de los valores de la cuenta
+def impresion(respuesta):
+    respuesta = str(respuesta).replace("'","")
+    return respuesta.replace("b","")

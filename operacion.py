@@ -2,12 +2,10 @@
 #	Operación se encarga de gestionar las diferentes peticiones de ingreso a la zona critica 
 #	que se presenta en la implementación de operar una cuenta bancaria.
 
-import threading, time, socket, os, threading, signal, random, string
+import time, socket, os, threading, signal, random, string
 from datetime import timedelta
 from tkinter import messagebox
-from historial import agregarHistorial
-
-
+from historial import agregarHistorial, impresion
 
 # Definición para generar una clave como identificador a los 
 # hilos para gestionarlos, es decir, un token 
@@ -17,6 +15,8 @@ def generarPassword(longitud):
 	for i in range(longitud):
 		car = random.choice(caracteres)
 		password = password + car
+	print("Cree un token " + password)
+    
 	return password
 
 # Clase que define el tipo de transacciones que un cliente 
@@ -59,12 +59,12 @@ class Operacion():
     # Se establece un tiempo de espera para mantener la sesión abierta
     def timeout(self):
         self.timeoutVal = time.time()
-        self.timeoutVal += 100.0
+        self.timeoutVal += 1000.0
         agregarHistorial(' O ** Inicia el tiempo de espera ')
 
     # Se asigna un token a la transacción
     def token(self, token):
-        agregarHistorial(' 0 ** Token actual ' + str(token))
+        agregarHistorial(' 0 ** Token actual ' + str(impresion(token)))
         return token
 
     # Se cierra la transacción
@@ -106,19 +106,19 @@ class Operacion():
         # Se verifica que no se haya terminado el tiempo de sesión
         if(self.timeoutVal < time.time()):
             self.sesionFinalizada = True
-            agregarHistorial(' 0 ** >> TOKEN DEL CLIENTE FINALIZADO **** T: ' + str(token))
+            agregarHistorial(' 0 ** >> TOKEN DEL CLIENTE FINALIZADO **** T: ' + str(impresion(token)))
             return self.abortaTransaccion('Se acabo el tiempo, sesion finalizada')
 	        
         # Consultar no bloquea la cuenta   
         if(operacion == 'consultar'):
-            agregarHistorial(' 0 ** Operacion consultar ')
+            agregarHistorial(' 0 ** Operacion consultar  T >> ' + str(impresion(token)))
             ope = Transaccion(self.saldo)
             return ope.consultar()
 
         elif(operacion == 'depositar'):
             self.bloqueado = True
             print('Entre a depositar')
-            agregarHistorial(' 0 ** Operacion depositar ')
+            agregarHistorial(' 0 ** Operacion depositar T >> ' + str(impresion(token)))
             ope = Transaccion(self.saldo)
             # Tiempo que permitira comprobar si se bloquea o no la 
             # cuenta dependiendo si se trata de lectura/escritura
@@ -128,7 +128,7 @@ class Operacion():
 
         elif(operacion == 'retirar'):
             self.bloqueado = True
-            agregarHistorial(' 0 ** Operacion retirar ')
+            agregarHistorial(' 0 ** Operacion retirar T >> ' + str(impresion(token)))
             ope = Transaccion(self.saldo)
             # Tiempo que permitira comprobar si se bloquea o no la 
             # cuenta dependiendo si se trata de lectura/escritura
@@ -143,7 +143,7 @@ class Operacion():
                 return self.saldo
 
         elif(operacion == 'cerrarSesion'):
-            agregarHistorial(' 0 ** Operacion cerrar sesión ')
+            agregarHistorial(' 0 ** Operacion cerrar sesión T >> ' + str(impresion(token)))
             ope = Transaccion(self.saldo)
             nuevoSaldo = ope.consultar()
             return self.cerrarTransaccion(nuevoSaldo)
