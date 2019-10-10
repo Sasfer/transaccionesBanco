@@ -1,3 +1,4 @@
+#-*- coding: utf-8-*-
 # Descripción:
 #	El cliente se encarga de indicar que operación se aplicará 
 #	sobre la cuenta, en general el procedimiento que sigue cada
@@ -14,7 +15,7 @@ from tkinter import messagebox
 from historial import agregarHistorial, impresion
 
 direccionServidor = ('localhost', 4444)
-MAX_DATA = 4096
+maxData = 4096
 
 class Cliente():
     # Definición para crear un cliente
@@ -30,8 +31,8 @@ class Cliente():
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.sock.connect(direccionServidor)
         except:
-            agregarHistorial(' C ** Error en la conexión con el SERVIDOR')
-            messagebox.showinfo("Error", "Fallo en la conexión")
+            agregarHistorial(' C ** Error en la conexion con el SERVIDOR')
+            messagebox.showinfo("Error", "Fallo en la conexion")
 
     # Definición para iniciar una sesión
     def iniciarSesion(self):
@@ -40,18 +41,18 @@ class Cliente():
             self.solicitud = {'iniciar': True, 'cliente': self.nombreCliente}
             peticionJSON = json.dumps(self.solicitud, separators=(',', ':'))
             self.sock.send(peticionJSON.encode())
-            token = self.sock.recv(MAX_DATA)
-            if(len(token) == 10):
+            token = self.sock.recv(maxData)
+            if(len(token) == 6):
                 self.token = token
-                agregarHistorial(' C ** Inicio sesión ' + str(self.nombreCliente) + ' > T: ' + str(impresion(self.token)))
-                messagebox.showinfo("Bienvenido", "Ha iniciado sesión " + self.nombreCliente)
+                agregarHistorial(' C ** Inicio sesion ' + str(self.nombreCliente) + ' > T: ' + str(impresion(self.token)))
+                messagebox.showinfo("Bienvenido", "Ha iniciado sesion " + self.nombreCliente)
                 self.cerrarSocket()
                 # Regresa 1 si se inicio correctamente la sesión
                 return 1
             else:
                 self.token = None
-                agregarHistorial(' C ** Error al iniciar sesión ' + str(self.nombreCliente) + ' > T: ' + str(impresion(self.token)))
-                messagebox.showinfo("Error", "No se ha podido iniciar sesión " + str(self.nombreCliente) + ". Intente de nuevo")
+                agregarHistorial(' C ** Error al iniciar sesion ' + str(self.nombreCliente) + ' > T: ' + str(impresion(self.token)))
+                messagebox.showinfo("Error", "No se ha podido iniciar sesion " + str(self.nombreCliente) + ". Intente de nuevo")
                 self.cerrarSocket()
                 # Regresa 0 si no se inicio correctamente la sesión
                 return 0
@@ -66,13 +67,18 @@ class Cliente():
             self.solicitud = {'token': str(self.token), 'operacion': 'consultar', 'parametros':False, 'iniciar': False}
             peticionJSON = json.dumps(self.solicitud, separators=(',', ':'))
             self.sock.send(peticionJSON.encode())
-            respuesta = self.sock.recv(MAX_DATA)
-            agregarHistorial(' C ** Consulta por > ' + str(self.nombreCliente) + ' Saldo actual: ' + str(impresion(respuesta)) + ' > T: ' + str(impresion(self.token)))
-            messagebox.showinfo("Consulta SALDO", str(self.nombreCliente) + " el saldo actual de la cuenta es de $ " + str(impresion(respuesta)))
-            self.cerrarSocket()
-            # Regresa un -1 cuando la sesion finalizo
-            if(respuesta == b'Se acabo el tiempo, sesion finalizada' or respuesta ==b'ERROR EN LA TRANSACCION'):
+            respuesta = self.sock.recv(maxData)
+            # Regresa un -1 cuando hay algun error en la transaccion
+            if(respuesta == b'Se acabo el tiempo, sesion finalizada'):
+                messagebox.showinfo("Notificacion","Se acabo el tiempo, sesion finalizada")
                 return -1
+            elif (respuesta ==b'ERROR EN LA TRANSACCION' or respuesta == b'Token invalido'):
+                messagebox.showinfo("Error","Error D:")
+                return -1
+            else:
+                agregarHistorial(' C ** Consulta por > ' + str(self.nombreCliente) + ' Saldo actual: ' + str(impresion(respuesta)))
+                messagebox.showinfo("Consulta SALDO", str(self.nombreCliente) + " el saldo actual de la cuenta es de $ " + str(impresion(respuesta)))
+            self.cerrarSocket()
         except:
             agregarHistorial(" C ** No se pudo realizar la consulta")
             return -1
@@ -84,14 +90,18 @@ class Cliente():
             self.solicitud = {'token': str(self.token), 'operacion':'depositar', 'parametros': monto, 'iniciar': False}
             peticionJSON = json.dumps(self.solicitud, separators=(',', ':'))
             self.sock.send(peticionJSON.encode())
-            respuesta = self.sock.recv(MAX_DATA)
-            agregarHistorial(' C ** Deposito por > ' + str(self.nombreCliente) + ' Saldo actual: ' + str(impresion(respuesta)) + ' > T: ' + str(impresion(self.token)))
-            self.cerrarSocket()
-            #Regresa un -1 cuando la sesion finalizo
-            if(respuesta == b'Se acabo el tiempo, sesion finalizada' or respuesta ==b'ERROR EN LA TRANSACCION'):
+            respuesta = self.sock.recv(maxData)
+            # Regresa un -1 cuando hay algun error en la transaccion
+            if(respuesta == b'Se acabo el tiempo, sesion finalizada'):
+                messagebox.showinfo("Notificacion","Se acabo el tiempo, sesion finalizada")
+                return -1
+            elif (respuesta ==b'ERROR EN LA TRANSACCION' or respuesta == b'Token invalido'):
+                messagebox.showinfo("Error","Error D:")
                 return -1
             else:
                 messagebox.showinfo("Deposito", str(self.nombreCliente) + " realizo un deposito de $ " + str(monto) + '\n*** Saldo actual $ ' + str(impresion(respuesta)))
+                agregarHistorial(' C ** Deposito por > ' + str(self.nombreCliente) + ' Saldo actual: ' + str(impresion(respuesta)))
+            self.cerrarSocket()
         except:
             agregarHistorial(" C ** No se pudo realizar el deposito")
             return -1
@@ -103,11 +113,13 @@ class Cliente():
             self.solicitud = {'token': str(self.token), 'operacion':'retirar', 'parametros':monto, 'iniciar': False}
             peticionJSON = json.dumps(self.solicitud, separators=(',', ':'))
             self.sock.send(peticionJSON.encode())
-            respuesta = self.sock.recv(MAX_DATA)
-            agregarHistorial(' C ** Retiro por > ' + str(self.nombreCliente) + ' Saldo actual: ' + str(impresion(respuesta)) + ' > T: ' + str(impresion(self.token)))
-            self.cerrarSocket()
-            # Regresa un -1 cuando la sesion finalizo
-            if(respuesta == b'Se acabo el tiempo, sesion finalizada' or respuesta ==b'ERROR EN LA TRANSACCION'):
+            respuesta = self.sock.recv(maxData)
+            # Regresa un -1 cuando hay algun error en la transaccion
+            if(respuesta == b'Se acabo el tiempo, sesion finalizada'):
+                messagebox.showinfo("Notificacion","Se acabo el tiempo, sesion finalizada")
+                return -1
+            elif (respuesta ==b'ERROR EN LA TRANSACCION' or respuesta == b'Token invalido'):
+                messagebox.showinfo("Error","Error D:")
                 return -1
             # Se indica cuando no hay saldo insuficiente
             elif (respuesta == b' Saldo insuficiente'):
@@ -115,6 +127,8 @@ class Cliente():
             # Se indica que se realizó el retiro
             else:
                 messagebox.showinfo("Retiro", str(self.nombreCliente) + " realizo un retiro de $ " + str(monto) + '\n*** Saldo actual $ ' + str(impresion(respuesta)))
+                agregarHistorial(' C ** Retiro por > ' + str(self.nombreCliente) + ' Saldo actual: ' + str(impresion(respuesta)))
+            self.cerrarSocket()        
         except:
             agregarHistorial(" C ** No se pudo realizar el retiro")
             return -1
@@ -127,8 +141,16 @@ class Cliente():
             peticionJSON = json.dumps(self.solicitud, separators=(',', ':'))
             self.sock.send(peticionJSON.encode())
             respuesta = self.sock.recv(MAX_DATA)
-            agregarHistorial(' C ** Finalizo sesión ' + str(self.nombreCliente) + ' ,' + str(impresion(respuesta)))
-            messagebox.showinfo("Adios", "Ha finalizado sesión " + self.nombreCliente)
+            # Regresa un -1 cuando hay algun error en la transaccion
+            if(respuesta == b'Se acabo el tiempo, sesion finalizada'):
+                messagebox.showinfo("Notificacion","Se acabo el tiempo, sesion finalizada")
+                return -1
+            elif (respuesta ==b'ERROR EN LA TRANSACCION' or respuesta == b'Token invalido'):
+                messagebox.showinfo("Error","Error D:")
+                return -1
+            else:
+                agregarHistorial(' C ** Finalizo sesion ' + str(self.nombreCliente) + ' ,' + str(impresion(respuesta)))
+                messagebox.showinfo("Adios", "Ha finalizado sesion " + self.nombreCliente)
             self.sock.close()
         except:
             return -1
