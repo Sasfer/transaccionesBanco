@@ -1,3 +1,4 @@
+#-*- coding: utf-8-*-
 # Descripción:
 #   Ventana principal para que varios clientas puedan accesar a una misma 
 #	cuenta y poder hacer diversas operaciones sobre esta.
@@ -11,6 +12,7 @@ cliente = None # Esto debería estar dentro de una clase para no usar variables 
 # Operación para inicar la conexión de un cliente a la cuenta
 def ingresar():
 	global cliente
+	
 	# Variables con valores capturados de la GUI del cliente
 	nc = str(nombreCliente.get())
 	n = str(nip.get()) 
@@ -18,7 +20,7 @@ def ingresar():
 	if nc == "" or n == "":
 		messagebox.showinfo("Error", "No has ingresado el nombre del cliente o el NIP")
 	else:
-		messagebox.showinfo("Notificación", "Has solicitado ingresar a la cuenta")
+		messagebox.showinfo("Notificacion", "Has solicitado ingresar a la cuenta")
 		
 		# Creación del objeto identificador del cliente
 		cliente = Cliente(nc)
@@ -47,7 +49,7 @@ def ingresar():
 # Operación para hacer una consulta del estado de la cuenta
 def consultar():
 	global cliente
-	messagebox.showinfo("Notificación", "Has solicitado consultar la cuenta")
+	messagebox.showinfo("Notificacion", "Has solicitado consultar la cuenta")
 
 	# Se realiza una consulta a la cuenta
 	res = cliente.consultar()
@@ -83,9 +85,9 @@ def retirar():
 	m = str(montoE.get())
 
 	if m == "":
-		messagebox.showinfo("Notificación", "No has ingresado el monto a retirar")	
+		messagebox.showinfo("Notificacion", "No has ingresado el monto a retirar")	
 	else:
-		messagebox.showinfo("Notificación", "Has solicitado hacer un retiro de la cuenta")	
+		messagebox.showinfo("Notificacion", "Has solicitado hacer un retiro de la cuenta")	
 		
 		# Se realiza un retiro a la cuenta
 		res = cliente.retirar(m)
@@ -121,9 +123,9 @@ def depositar():
 	m = str(montoE.get())
 
 	if m == "":
-		messagebox.showinfo("Notificación", "No has ingresado el monto a depositar")	
+		messagebox.showinfo("Notificacion", "No has ingresado el monto a depositar")	
 	else:
-		messagebox.showinfo("Notificación", "Has solicitado hacer un deposito a la cuenta")
+		messagebox.showinfo("Notificacion", "Has solicitado hacer un deposito a la cuenta")
 
 		# Se realiza un deposito a la cuenta
 		res = cliente.depositar(m)
@@ -155,7 +157,7 @@ def depositar():
 def salir():
 	global cliente
 
-	messagebox.showinfo("Notificación", "Has solicitado salir de la cuenta")
+	messagebox.showinfo("Notificacion", "Has solicitado salir de la cuenta")
 
 	# Se cierra la sesión del cliente
 	cliente.cerrarSesion()
